@@ -120,7 +120,42 @@ module game_on_move::hero {
     const ENO_SWORD: u64 = 4;
 
     const EWRONG_GAME_PLAY: u64 = 5;
+
+    /// -------------------------------------------------------------------------------
+    /// -------------------------ENTRY FUNCTION TẠO GAME ------------------------------
+    /// -------------------------------------------------------------------------------
     
+    public entry fun new_game(ctx: &mut TxContext) {
+        create(ctx);
+    }
+    
+    /// -------------------------------------------------------------------------------
+    /// -----------------HELPER FUNCTION CHO VIỆC TẠO GAME ADMIN VÀ GAME INFO----------
+    /// -------------------------------------------------------------------------------
+    fun create(ctx: &mut TxContext){
+        let sender = tx_context::sender(ctx);
+        let id = object::new(ctx);
+        let game_id = object::uid_to_inner(&id);
+    
+        transfer::share_object(GameInfo { 
+            id, 
+            admin: sender,
+            payments: balance::zero()
+        });
+    
+        transfer::transfer(
+            GameAdmin {
+                id: object::new(ctx),
+                boars_created: 0,
+                potions_created: 0,
+                game_id,
+            }, 
+            sender
+        )
+    
+    }
+
+
 
 }
 
