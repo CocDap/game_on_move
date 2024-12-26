@@ -8,6 +8,7 @@ module game_on_move::hero {
     use sui::sui::SUI;
     use sui::balance::{Self, Balance};
     use sui::coin::{Self, Coin};
+    use sui::event;
 
     /// -------------------------------------------------------------------------------
     /// -------------------------------ĐỊNH NGHĨA OBJECT-------------------------------
@@ -229,6 +230,93 @@ module game_on_move::hero {
     }
 
 
+    /// -------------------------------------------------------------------------------
+    /// --------------ENTRY FUNCTION LIÊN QUAN TỚI HÀNH ĐỘNG CỦA HERO------------------
+    /// -------------------------------------------------------------------------------
+    
+    // Hàm đánh quái 
+    public entry fun slay(game: &GameInfo, hero: &mut Hero, boar: Boar, ctx: &TxContext){
+    
+        // Kiểm tra game ID của hero 
+        assert!(object::id(game) == hero.game_id, EWRONG_GAME_PLAY);
+        // Kiểm tra game ID của Boar
+        assert!(object::id(game) == boar.game_id, EWRONG_GAME_PLAY);
+    
+        // Destructure boar object 
+        let Boar {id: boar_id, strength: boar_strength, hp, game_id: _} = boar;
+        let hero_strength = hero_strength(hero);
+    
+        assert!(hero_strength !=0, EHERO_TIRED);
+    
+        let mut boar_hp = hp;
+    
+        let mut hero_hp = hero.hp;
+    
+        // Tấn công boar cho đến khi HP của Boar còn 0 
+        while (boar_hp > hero_strength) {
+            // đầu tiên hero attack trước 
+            boar_hp = boar_hp - hero_strength; 
+            // sau đó boar attack 
+            assert!(hero_hp >= boar_strength, EBOAR_WON);
+    
+            hero_hp = hero_hp - boar_strength;
+    
+        };
+    
+        // lưu lại HP của Hero sau khi tấn công boar
+    
+        hero.hp = hero_hp;
+        // Nhận kinh nghiệm bằng lượng HP của boar sau khi đánh bại 
+        hero.experience = hero.experience + hp;
+        
+        // Tăng sức mạnh của Sword lên 1 đơn vị 
+    
+        if (option::is_some(&hero.sword)) {
+            level_up_sword(option::borrow_mut(&mut hero.sword), 1)
+        };
+        event::emit(BoarSlainEvent {
+            slayer_address: tx_context::sender(ctx),
+            hero: object::uid_to_inner(&hero.id),
+            boar: object::uid_to_inner(&boar_id),
+            game_id: object::id(game)
+        });
+    
+        object::delete(boar_id);
+    
+    }
+    
+    /// -------------------------------------------------------------------------------
+    /// ---------------------HELPER FUNCTION CHO HÀM SLAY(ĐÁNH QUÁI)-------------------
+    /// -------------------------------------------------------------------------------
+    
+    // Sức mạnh của Sword khi tấn công 
+    public fun sword_strength(sword: &Sword): u64 {
+        sword.magic + sword.strength
+    }
+    
+    // Sức mạnh của Hero khi tấn công 
+    public fun hero_strength(hero: &Hero): u64 {
+        // Nếu hero có HP = 0 thì không thể attack 
+    
+        if (hero.hp == 0) {
+            return 0
+        };
+        // Nếu hero có sử dụng Sword -> lấy sức mạnh của Sword 
+        let  sword_strength  = if (option::is_some(&hero.sword)) {
+            sword_strength(option::borrow(&hero.sword))
+        }
+        else {
+            0
+        };
+    
+        // Sức mạnh của hero 
+        (hero.experience * hero.hp) + sword_strength
+    }
+    
+    // Tăng cấp cho Sword 
+    public fun level_up_sword(sword: &mut Sword, amount: u64) {
+        sword.strength =  sword.strength + amount;
+    }
 
 }
 
