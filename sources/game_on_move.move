@@ -318,6 +318,28 @@ module game_on_move::hero {
         sword.strength =  sword.strength + amount;
     }
 
+
+    /// -------------------------------------------------------------------------------
+    /// -------------------------ENTRY FUNCTION ADMIN TẠO POTION---------------------
+    /// -------------------------------------------------------------------------------
+    
+    // Admin tạo potion (bình máu) cho player 
+    public entry fun send_potion(
+        game: &GameInfo,
+        potency: u64,
+        player: address,
+        admin: &mut GameAdmin,
+        ctx: &mut TxContext
+    ) {
+        assert!(object::id(game) == admin.game_id, EWRONG_GAME_PLAY);
+        admin.potions_created = admin.potions_created + 1;
+        // send potion to the designated player
+        transfer::transfer(
+            Potion { id: object::new(ctx), potency, game_id: object::id(game) },
+            player
+        )
+    }
+
 }
 
 
