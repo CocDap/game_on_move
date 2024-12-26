@@ -7,7 +7,7 @@ module game_on_move::hero {
     
     use sui::sui::SUI;
     use sui::balance::{Self, Balance};
-
+    use sui::coin::{Self, Coin};
 
     /// -------------------------------------------------------------------------------
     /// -------------------------------ĐỊNH NGHĨA OBJECT-------------------------------
@@ -153,6 +153,55 @@ module game_on_move::hero {
             sender
         )
     
+    }
+
+    /// -------------------------------------------------------------------------------
+    /// -------------------------ENTRY FUNCTION TẠO HERO VÀ SWORD ------------------------------
+    /// -------------------------------------------------------------------------------
+    
+    public entry fun acquire_hero(game: &mut GameInfo, payment: Coin<SUI>, ctx: &mut TxContext) {
+        let sword = create_sword(game, payment, ctx);
+        let hero = create_hero(game, sword, ctx);
+        transfer::transfer(hero, tx_context::sender(ctx))
+    
+    }
+ 
+    /// -------------------------------------------------------------------------------
+    /// ---------------------HELPER FUNCTION TẠO HERO VÀ SWORD-------------------------
+    /// -------------------------------------------------------------------------------
+ 
+    // Tạo Sword
+    public fun create_sword(game: &mut GameInfo, payment: Coin<SUI>, ctx: &mut TxContext): Sword {
+        // Lấy số lượng coin hiện tại mà user sở hữu 
+        let value = coin::value(&payment);
+    
+        assert!(value >= MIN_SWORD_COST, EINSUFFICIENT_FUNDS);
+    
+        // pay coin cho admin 
+        coin::put(&mut game.payments, payment);
+    
+        // Công thức tính magic 
+        let magic =  (value - MIN_SWORD_COST)/ MIN_SWORD_COST;
+        Sword {
+            id: object::new(ctx),
+            magic: std::u64::min(magic, MAX_MAGIC),
+            strength: 1,
+            game_id: object::id(game)
+        }
+    
+    }
+    
+    // Tạo hero 
+    public fun create_hero(game: &GameInfo, sword: Sword, ctx: &mut TxContext): Hero {
+        // Kiểm tra có cùng game id hay không 
+        assert!(object::id(game) == sword.game_id, EWRONG_GAME_PLAY);
+        Hero {
+            id: object::new(ctx),
+            hp: 100,
+            experience: 0,
+            sword: option::some(sword),
+            game_id: object::id(game),
+        }
     }
 
 
