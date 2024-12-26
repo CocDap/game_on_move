@@ -204,6 +204,30 @@ module game_on_move::hero {
         }
     }
 
+    /// -------------------------------------------------------------------------------
+    /// -------------------------ENTRY FUNCTION ADMIN TẠO BOAR ---------------------
+    /// -------------------------------------------------------------------------------
+    
+    
+    // Admin tạo boar cho player 
+    public entry fun send_boar(
+        game: &GameInfo,
+        admin: &mut GameAdmin,
+        hp: u64,
+        strength: u64,
+        player: address,
+        ctx: &mut TxContext
+    ) {
+        assert!(object::id(game) == admin.game_id, EWRONG_GAME_PLAY);
+    
+        admin.boars_created = admin.boars_created + 1;
+        // send boars to the designated player
+        transfer::transfer(
+            Boar { id: object::new(ctx), hp, strength, game_id: object::id(game) },
+            player
+        )
+    }
+
 
 
 }
