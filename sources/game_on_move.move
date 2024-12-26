@@ -366,6 +366,18 @@ module game_on_move::hero {
         option::extract(&mut hero.sword)
     }
 
+    /// -------------------------------------------------------------------------------
+    /// ---------------------ENTRY FUNCTION LIÊN QUAN TỚI PAYMENT----------------------
+    /// -------------------------------------------------------------------------------
+    
+    public entry fun take_payment(admin: &GameAdmin, game: &mut GameInfo, ctx: &mut TxContext
+    ) {
+        assert!(admin.game_id == object::id(game), ENOT_ADMIN);
+        let payment = coin::from_balance(balance::withdraw_all(&mut game.payments), ctx);
+        transfer::public_transfer(payment, tx_context::sender(ctx))
+    }
+ 
+
 }
 
 
