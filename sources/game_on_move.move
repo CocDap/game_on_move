@@ -77,7 +77,21 @@ module game_on_move::hero {
 
     }
 
+    /// -------------------------------------------------------------------------------
+    /// -------------------------------ĐỊNH NGHĨA EVENT--------------------------------
+    /// -------------------------------------------------------------------------------
     
+
+    public struct BoarSlainEvent has copy, drop {
+        // player nào hạ gục boar
+        slayer_address: address,
+        // ID của hero mà user đang control 
+        hero: ID,
+        // ID của boar đã bị hạ gục
+        boar: ID,
+        game_id: ID
+
+    }
     
 }
 
