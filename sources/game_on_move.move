@@ -340,6 +340,32 @@ module game_on_move::hero {
         )
     }
 
+    /// -------------------------------------------------------------------------------
+    /// -------------------------ENTRY FUNCTION LIÊN QUAN TỚI TRANG BỊ-----------------
+    /// -------------------------------------------------------------------------------
+    
+    
+    /// Phục hồi máu cho hero 
+    public fun heal(hero: &mut Hero, potion: Potion) {
+        assert!(hero.game_id == potion.game_id, EWRONG_GAME_PLAY);
+        let Potion { id, potency, game_id: _ } = potion;
+        object::delete(id);
+        let new_hp = hero.hp + potency;
+        // maximum HP của hero là 1000
+        hero.hp = std::u64::min(new_hp, MAX_HP)
+    }
+    
+    /// Trang bị New Sword cho Hero và return old sword 
+    public fun equip_sword(hero: &mut Hero, new_sword: Sword): Option<Sword> {
+        option::swap_or_fill(&mut hero.sword, new_sword)
+    }
+    
+    /// Tháo Sword ra khỏi trang bị của Hero 
+    public fun remove_sword(hero: &mut Hero): Sword {
+        assert!(option::is_some(&hero.sword), ENO_SWORD);
+        option::extract(&mut hero.sword)
+    }
+
 }
 
 
